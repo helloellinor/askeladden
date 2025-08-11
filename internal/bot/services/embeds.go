@@ -1,9 +1,8 @@
-
 package services
 
 import (
-	"github.com/bwmarrin/discordgo"
 	"askeladden/internal/database"
+	"github.com/bwmarrin/discordgo"
 )
 
 // createDailyQuestionEmbed creates the embed for the daily question
@@ -40,6 +39,3 @@ func CreateBotEmbed(session *discordgo.Session, title, description string, color
 		},
 	}
 }
-
-
-

@@ -3,8 +3,8 @@ package commands
 import (
 	"log"
 
-	"github.com/bwmarrin/discordgo"
 	"askeladden/internal/bot"
+	"github.com/bwmarrin/discordgo"
 )
 
 func init() {
@@ -49,4 +49,3 @@ func ClearDatabase(s *discordgo.Session, m *discordgo.MessageCreate, bot *bot.Bo
 	// This is a simplified example; a more robust solution would store this mapping
 	log.Printf("Sent confirmation message with ID: %s", msg.ID)
 }
-

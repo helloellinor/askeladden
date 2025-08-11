@@ -5,9 +5,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/bwmarrin/discordgo"
 	"askeladden/internal/bot"
 	"askeladden/internal/database"
+	"github.com/bwmarrin/discordgo"
 )
 
 // ApprovalService handles logic for question approval.
@@ -136,7 +136,7 @@ func (s *ApprovalService) PostPendingBannedWordToRettingChannel(bannedWordID int
 		log.Printf("Failed to get banned word for retting channel posting: %v", err)
 		return
 	}
-	
+
 	if bannedWord == nil {
 		log.Printf("No banned word found with ID %d", bannedWordID)
 		return
@@ -161,11 +161,11 @@ func (s *ApprovalService) PostPendingBannedWordToRettingChannel(bannedWordID int
 	}
 
 	approvalEmbed := &discordgo.MessageEmbed{
-		Title: bannedWord.Word,
+		Title:       bannedWord.Word,
 		Description: "⏳ Opplysar-godkjenning: ventar\n⏳ Rettskrivar-godkjenning: ventar",
-		Color: 0xff0000, // Red
+		Color:       0xff0000, // Red
 		Author: &discordgo.MessageEmbedAuthor{
-			Name: authorName,
+			Name:    authorName,
 			IconURL: avatarURL,
 		},
 	}
@@ -204,14 +204,14 @@ func (s *ApprovalService) PostBannedWordReport(session *discordgo.Session, words
 	// For newly approved banned words, always create a forum thread
 	// Check if any words already have forum threads (for logging purposes)
 	var existingThreads []string
-	
+
 	for _, word := range words {
 		isBanned, bannedWord, err := s.Bot.Database.IsBannedWord(word)
 		if err != nil {
 			log.Printf("Error checking if word '%s' is banned: %v", word, err)
 			continue
 		}
-		
+
 		if isBanned && bannedWord.ForumThreadID != nil && *bannedWord.ForumThreadID != "" {
 			// Word already exists with a forum thread
 			existingThreads = append(existingThreads, *bannedWord.ForumThreadID)
@@ -263,22 +263,22 @@ func (s *ApprovalService) PostBannedWordReport(session *discordgo.Session, words
 
 	// Create discussion embed
 	discussionEmbed := &discordgo.MessageEmbed{
-		Title: "📝 Grammatikkdiskusjon: " + strings.Join(words, ", "),
+		Title:       "📝 Grammatikkdiskusjon: " + strings.Join(words, ", "),
 		Description: "Dette ordet/desse orda har vorte rapporterte som grammatisk feil.",
-		Color: 0xff6b35, // Orange color
+		Color:       0xff6b35, // Orange color
 		Author: &discordgo.MessageEmbedAuthor{
-			Name: "Rapportert av " + reporterName,
+			Name:    "Rapportert av " + reporterName,
 			IconURL: reporterAvatarURL,
 		},
 		Fields: []*discordgo.MessageEmbedField{
 			{
-				Name: "📍 Opphavleg melding",
-				Value: originalInfo,
+				Name:   "📍 Opphavleg melding",
+				Value:  originalInfo,
 				Inline: false,
 			},
 			{
-				Name: "💡 Diskusjonsrettleiing",
-				Value: "• Forklar kvifor ordet er feil\n• Gje korrekte alternativ\n• Del relevante reglar eller kjelder",
+				Name:   "💡 Diskusjonsrettleiing",
+				Value:  "• Forklar kvifor ordet er feil\n• Gje korrekte alternativ\n• Del relevante reglar eller kjelder",
 				Inline: false,
 			},
 		},
