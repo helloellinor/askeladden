@@ -36,6 +36,27 @@ scheduler:
 reactions:
   question: "🔶"  # Beta uses 🔶 instead of ❓ to avoid collision
 
+# Welcome messages for new members
+welcome:
+  enabled: true
+  channelID: "1402262679745462453"  # kvardagsprat (same as default channel)
+  message: "Velkommen til serveren, {user}! 🎉 Les gjerne {rules} og spør viss du lurer på noko."
+
+# Rules information
+rules:
+  title: "📋 Serverreglar"
+  content: |
+    **Hovudreglar:**
+    • Ver respektfull mot andre medlemmar
+    • Følg Discords retningslinjer
+    • Hald deg til emna i kanalane
+    • Spør gjerne om grammatikk og språk!
+    
+    **Grammatikkkanalen:**
+    • Bruk 🔨-reaksjon for å rapportere feil ord
+    • Bruk `?ord <ord>` for ordbok-oppslag
+    • Bruk `?kontekst <ord> <setning>` for kontekstanalyse
+
 # Beta-specific settings
 environment: "beta"
 table_suffix: "_testing"  # Will create daily_questions_testing

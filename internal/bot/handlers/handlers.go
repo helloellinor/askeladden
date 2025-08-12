@@ -23,7 +23,9 @@ type Handler struct {
 func New(b *bot.Bot) *Handler {
 	// Create services instance
 	botServices := &services.BotServices{
-		Approval: &services.ApprovalService{Bot: b},
+		Approval:     &services.ApprovalService{Bot: b},
+		Dictionary:   services.NewDictionaryService(),
+		EmbedBuilder: services.NewEmbedBuilderService(b.Config),
 	}
 
 	return &Handler{
@@ -45,6 +47,15 @@ func (h *Handler) Ready(s *discordgo.Session, event *discordgo.Ready) {
 func (h *Handler) MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Ignore all messages created by the bot itself
 	if s.State.User.ID == m.Author.ID {
+		return
+	}
+
+	// Handle DM messages for embed creation
+	if m.GuildID == "" { // DM message
+		if h.Services.EmbedBuilder.HandleDMMessage(s, m) {
+			return // Message was handled by embed builder
+		}
+		// Other DM handling can go here
 		return
 	}
 
@@ -403,5 +414,30 @@ func (h *Handler) InteractionCreate(s *discordgo.Session, i *discordgo.Interacti
 			// Delete the original confirmation message
 			s.ChannelMessageDelete(i.ChannelID, i.Message.ID)
 		}
+	}
+}
+
+// GuildMemberAdd handles when a new member joins the guild
+func (h *Handler) GuildMemberAdd(s *discordgo.Session, m *discordgo.GuildMemberAdd) {
+	// Check if welcome messages are enabled
+	if !h.Bot.Config.Welcome.Enabled || h.Bot.Config.Welcome.ChannelID == "" {
+		return
+	}
+
+	// Create welcome message
+	welcomeText := h.Bot.Config.Welcome.Message
+	if welcomeText == "" {
+		welcomeText = fmt.Sprintf("Velkommen til serveren, %s! 🎉", m.User.Mention())
+	} else {
+		// Replace placeholder with user mention
+		welcomeText = strings.ReplaceAll(welcomeText, "{user}", m.User.Mention())
+		welcomeText = strings.ReplaceAll(welcomeText, "{username}", m.User.Username)
+	}
+
+	embed := services.CreateBotEmbed(s, "Velkommen! 👋", welcomeText, services.EmbedTypeSuccess)
+
+	_, err := s.ChannelMessageSendEmbed(h.Bot.Config.Welcome.ChannelID, embed)
+	if err != nil {
+		log.Printf("Failed to send welcome message: %v", err)
 	}
 }
