@@ -56,6 +56,19 @@ type Config struct {
 		Question string `yaml:"question"`
 	} `yaml:"reactions"`
 
+	// Welcome messages
+	Welcome struct {
+		Enabled   bool   `yaml:"enabled"`
+		ChannelID string `yaml:"channelID"`
+		Message   string `yaml:"message"`
+	} `yaml:"welcome"`
+
+	// Rules information
+	Rules struct {
+		Title   string `yaml:"title"`
+		Content string `yaml:"content"`
+	} `yaml:"rules"`
+
 	// Beta environment settings
 	Environment       string `yaml:"environment"`
 	TableSuffix       string `yaml:"table_suffix"`
