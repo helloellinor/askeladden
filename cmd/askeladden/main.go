@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -13,10 +12,20 @@ import (
 	"askeladden/internal/bot/services"
 	"askeladden/internal/config"
 	"askeladden/internal/database"
+	"askeladden/internal/logging"
 	"askeladden/internal/reactions"
 )
 
 func main() {
+	// Initialize logging system
+	logLevel := logging.INFO
+	if os.Getenv("DEBUG") == "true" {
+		logLevel = logging.DEBUG
+	}
+	logging.Initialize(logLevel)
+
+	logger := logging.GetLogger("MAIN")
+
 	// Load configuration using environment variables for file paths
 	configFile := os.Getenv("CONFIG_FILE")
 	if configFile == "" {
@@ -30,19 +39,19 @@ func main() {
 
 	cfg, err := config.LoadWithFiles(configFile, secretsFile)
 	if err != nil {
-		log.Fatalf("[MAIN] Kunne ikkje laste konfigurasjon: %v", err)
+		logger.Fatal("Could not load configuration: %v", err)
 	}
 
 	// Opprett database-tilkobling
 	db, err := database.New(cfg)
 	if err != nil {
-		log.Fatalf("[MAIN] Kunne ikkje kople til database: %v", err)
+		logger.Fatal("Could not connect to database: %v", err)
 	}
 
 	// Opprett Discord-sesjon
 	session, err := discordgo.New("Bot " + cfg.Discord.Token)
 	if err != nil {
-		log.Fatalf("[MAIN] Kunne ikkje lage Discord-sesjon: %v", err)
+		logger.Fatal("Could not create Discord session: %v", err)
 	}
 
 	// Enable necessary intents for message content
@@ -68,7 +77,7 @@ func main() {
 
 	// Start bot
 	if err := askeladden.Start(); err != nil {
-		log.Fatalf("[MAIN] Feil ved oppstart av bot: %v", err)
+		logger.Fatal("Error starting bot: %v", err)
 	}
 
 	// Scheduler for daily question trigger
@@ -88,6 +97,6 @@ func main() {
 
 	// Stopp bot
 	if err := askeladden.Stop(); err != nil {
-		log.Fatalf("[MAIN] Feil ved stopp av bot: %v", err)
+		logger.Fatal("Error stopping bot: %v", err)
 	}
 }
