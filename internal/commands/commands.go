@@ -34,31 +34,31 @@ func MatchAndRunCommand(input string, s *discordgo.Session, m *discordgo.Message
 	// Remove prefix to get the actual command
 	commandWithoutPrefix := strings.TrimPrefix(input, bot.Config.Discord.Prefix)
 
-	log.Printf("[DEBUG] MatchAndRunCommand: input='%s', prefix='%s', command='%s'", input, bot.Config.Discord.Prefix, commandWithoutPrefix)
+	log.Printf("[DEBUG] MatchAndRunCommand: input='%s', prefix='%s', kommando='%s'", input, bot.Config.Discord.Prefix, commandWithoutPrefix)
 
 	// Debug: list all registered commands
-	log.Printf("[DEBUG] Registered commands: %v", getCommandNames())
+	log.Printf("[DEBUG] Registrerte kommandoar: %v", getCommandNames())
 
 	// Try to find command by name without prefix
 	if cmd, exists := commands[commandWithoutPrefix]; exists {
-		log.Printf("[DEBUG] Found command '%s', executing", commandWithoutPrefix)
+		log.Printf("[DEBUG] Fann kommando '%s', utfører", commandWithoutPrefix)
 		cmd.handler(s, m, bot)
 		return
 	}
 
-	log.Printf("[DEBUG] Command '%s' not found, checking aliases", commandWithoutPrefix)
+	log.Printf("[DEBUG] Kommando '%s' ikkje funne, sjekkar alias", commandWithoutPrefix)
 	// Check aliases
 	for _, cmd := range commands {
 		for _, alias := range cmd.aliases {
 			if alias == commandWithoutPrefix {
-				log.Printf("[DEBUG] Found alias '%s', executing", alias)
+				log.Printf("[DEBUG] Fann alias '%s', utfører", alias)
 				cmd.handler(s, m, bot)
 				return
 			}
 		}
 	}
 
-	log.Printf("[DEBUG] No command or alias found for '%s'", commandWithoutPrefix)
+	log.Printf("[DEBUG] Ingen kommando eller alias funne for '%s'", commandWithoutPrefix)
 }
 
 // Helper function to get command names for debugging

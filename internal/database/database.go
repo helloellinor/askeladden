@@ -63,22 +63,22 @@ type DB struct {
 
 // New creates a new database connection
 func New(cfg *config.Config) (*DB, error) {
-	log.Printf("Connecting to database at %s:%d", cfg.Database.Host, cfg.Database.Port)
+	log.Printf("Koplar til database på %s:%d", cfg.Database.Host, cfg.Database.Port)
 	connStr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true",
 		cfg.Database.User, cfg.Database.Password, cfg.Database.Host, cfg.Database.Port, cfg.Database.DBName)
 
 	conn, err := sql.Open("mysql", connStr)
 	if err != nil {
-		log.Printf("Failed to open database connection: %v", err)
+		log.Printf("Kunne ikkje opne database-tilkopling: %v", err)
 		return nil, err
 	}
 
 	if err := conn.Ping(); err != nil {
-		log.Printf("Failed to ping database: %v", err)
+		log.Printf("Kunne ikkje teste database-tilkopling: %v", err)
 		return nil, err
 	}
 
-	log.Println("Database connection established successfully")
+	log.Println("Database-tilkopling oppretta")
 
 	// Determine table names based on config
 	tableName := "daily_questions"
@@ -90,7 +90,7 @@ func New(cfg *config.Config) (*DB, error) {
 		tableName += cfg.TableSuffix
 		bannedWordsTable += cfg.TableSuffix
 		starboardTable += cfg.TableSuffix
-		log.Printf("Using beta table names: %s, %s, %s", tableName, bannedWordsTable, starboardTable)
+		log.Printf("Brukar beta-tabellnamn: %s, %s, %s", tableName, bannedWordsTable, starboardTable)
 	}
 
 	db := &DB{
@@ -101,9 +101,9 @@ func New(cfg *config.Config) (*DB, error) {
 	}
 
 	// Create tables if they don't exist
-	log.Println("Creating database tables if they don't exist")
+	log.Println("Lagar database-tabellar viss dei ikkje finst")
 	if err := db.createTables(); err != nil {
-		log.Printf("Failed to create tables: %v", err)
+		log.Printf("Kunne ikkje lage tabellar: %v", err)
 		return nil, err
 	}
 
@@ -125,7 +125,7 @@ func New(cfg *config.Config) (*DB, error) {
 		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	);`, db.bannedWordsTable)
 
-	log.Printf("Creating table: %s", db.bannedWordsTable)
+	log.Printf("Lagar tabell: %s", db.bannedWordsTable)
 	if _, err := db.conn.Exec(bannedWordsQuery); err != nil {
 		return nil, fmt.Errorf("failed to create %s table: %w", db.bannedWordsTable, err)
 	}
@@ -136,7 +136,7 @@ func New(cfg *config.Config) (*DB, error) {
 		return nil, err
 	}
 
-	log.Println("Database initialization completed")
+	log.Println("Database-initialisering fullført")
 	return db, nil
 }
 

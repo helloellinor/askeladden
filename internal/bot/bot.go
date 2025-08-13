@@ -5,9 +5,10 @@ package bot
 import (
 	"log"
 
+	"github.com/bwmarrin/discordgo"
+
 	"askeladden/internal/config"
 	"askeladden/internal/database"
-	"github.com/bwmarrin/discordgo"
 )
 
 // Bot represents the main bot structure.
@@ -26,24 +27,24 @@ func New(cfg *config.Config, db *database.DB, session *discordgo.Session) *Bot {
 	}
 }
 
-// Start starts the bot.
+// Start startar boten og opnar Discord-tilkoplinga.
 func (b *Bot) Start() error {
-	log.Println("[BOT] Attempting to connect to Discord...")
+	log.Println("[BOT] Prøver å kople til Discord...")
 	// Open connection
 	err := b.Session.Open()
 	if err != nil {
-		log.Printf("[BOT] Failed to open Discord session: %v", err)
+		log.Printf("[BOT] Kunne ikkje opne Discord-sesjon: %v", err)
 		return err
 	}
 
-	log.Println("[BOT] Discord session opened successfully")
-	log.Println("[BOT] Askeladden is running and ready to handle messages.")
+	log.Println("[BOT] Discord-sesjon opna")
+	log.Println("[BOT] Askeladden køyrer og er klar til å handtere meldingar.")
 	return nil
 }
 
-// Stop stops the bot.
+// Stop stoppar boten og stenger alle tilkoplingar.
 func (b *Bot) Stop() error {
-	log.Println("[BOT] Askeladden is logging off.")
+	log.Println("[BOT] Askeladden loggar av.")
 	// Log channel message will be sent from main.go before calling Stop()
 
 	// Close database connection
