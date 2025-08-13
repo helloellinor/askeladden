@@ -51,10 +51,10 @@ type DatabaseIface interface {
 var _ DatabaseIface = (*DB)(nil)
 
 type DB struct {
-	conn              *sql.DB
-	tableName         string // Dynamic table name (daily_questions or daily_questions_testing)
-	bannedWordsTable  string // banned_bokmal_words or banned_bokmal_words_testing
-	starboardTable    string // starboard_messages or starboard_messages_testing
+	conn             *sql.DB
+	tableName        string // Dynamic table name (daily_questions or daily_questions_testing)
+	bannedWordsTable string // banned_bokmal_words or banned_bokmal_words_testing
+	starboardTable   string // starboard_messages or starboard_messages_testing
 }
 
 // New creates a new database connection
@@ -81,7 +81,7 @@ func New(cfg *config.Config) (*DB, error) {
 	bannedWordsTable := "banned_bokmal_words"
 
 	starboardTable := "starboard_messages"
-	
+
 	if cfg.TableSuffix != "" {
 		tableName += cfg.TableSuffix
 		bannedWordsTable += cfg.TableSuffix
