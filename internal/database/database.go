@@ -1,3 +1,6 @@
+// Package database implementerer database-operasjonar for Askeladden.
+// Denne pakken handsamar alle spøringar og transaksjonar mot MySQL-databasen,
+// inkludert spørsmål, bannlyste ord og starboard-funksjonalitet.
 package database
 
 import (
@@ -7,9 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"askeladden/internal/config"
 	"github.com/bwmarrin/discordgo"
 	_ "github.com/go-sql-driver/mysql"
+
+	"askeladden/internal/config"
 )
 
 type DatabaseIface interface {

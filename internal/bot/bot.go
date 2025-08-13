@@ -1,3 +1,5 @@
+// Package bot implementerer kjernefunksjonaliteten til Askeladden Discord-boten.
+// Denne pakken handsamar Discord-tilkobling, session-handsaming og grunnleggjande bot-operasjonar.
 package bot
 
 import (

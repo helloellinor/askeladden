@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bwmarrin/discordgo"
+
 	"askeladden/internal/bot"
 	"askeladden/internal/bot/services"
 	"askeladden/internal/database"
-
-	"github.com/bwmarrin/discordgo"
 )
 
 func init() {

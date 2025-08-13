@@ -1,3 +1,6 @@
+// Package config handsamar konfigurasjon av Askeladden Discord-boten.
+// Denne pakken les YAML-konfigurasjonsfiler og gjer innstillingar tilgjengelege
+// for resten av applikasjonen.
 package config
 
 import (

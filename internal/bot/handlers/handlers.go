@@ -5,11 +5,12 @@ import (
 	"log"
 	"strings"
 
+	"github.com/bwmarrin/discordgo"
+
 	"askeladden/internal/bot"
 	"askeladden/internal/bot/services"
 	"askeladden/internal/commands"
 	"askeladden/internal/reactions"
-	"github.com/bwmarrin/discordgo"
 )
 
 // Handler struct holds the bot instance and services.
