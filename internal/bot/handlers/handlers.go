@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -10,6 +9,7 @@ import (
 	"askeladden/internal/bot"
 	"askeladden/internal/bot/services"
 	"askeladden/internal/commands"
+	"askeladden/internal/logging"
 	"askeladden/internal/reactions"
 )
 
@@ -35,7 +35,9 @@ func New(b *bot.Bot) *Handler {
 
 // Ready handsamar ready-hendinga frå Discord.
 func (h *Handler) Ready(s *discordgo.Session, event *discordgo.Ready) {
-	log.Println("[BOT] Askeladden er tilkopla og klar.")
+	logger := logging.GetLogger("HANDLER")
+	logger.Info("Askeladden is connected and ready")
+
 	if h.Bot.Config.Discord.LogChannelID != "" {
 		embed := services.CreateBotEmbed(s, "🟢 Online", "Askeladden is online and ready! ✨", services.EmbedTypeSuccess)
 		s.ChannelMessageSendEmbed(h.Bot.Config.Discord.LogChannelID, embed)
@@ -49,25 +51,25 @@ func (h *Handler) MessageCreate(s *discordgo.Session, m *discordgo.MessageCreate
 		return
 	}
 
-	log.Printf("[DEBUG] Mottok melding: '%s', prefix: '%s'", m.Content, h.Bot.Config.Discord.Prefix)
+	logger := logging.GetLogger("HANDLER")
+	logger.Debug("Received message: '%s', prefix: '%s'", m.Content, h.Bot.Config.Discord.Prefix)
 
 	// Handle commands (messages with prefix)
 	if strings.HasPrefix(m.Content, h.Bot.Config.Discord.Prefix) {
 		// Extract command and arguments
 		commandWithPrefix := strings.Split(m.Content, " ")[0]
-		log.Printf("[DEBUG] Kommando med prefix: '%s'", commandWithPrefix)
+		logger.Debug("Command with prefix: '%s'", commandWithPrefix)
 
 		// Check if the command is admin-only
 		if commands.IsAdminCommand(commandWithPrefix) {
-			log.Printf("[DEBUG] Kommando er kun for admin, sjekkar tilgang")
 			if !h.Services.Approval.UserHasOpplysarRole(s, m.GuildID, m.Author.ID) {
-				log.Printf("[DEBUG] Brukar har ikkje admin-rolle, ignorerer")
+				logger.Debug("User %s lacks admin role for command %s", m.Author.Username, commandWithPrefix)
 				return // Silently ignore admin commands from non-admins
 			}
 		}
 
 		// Run the command
-		log.Printf("[DEBUG] Utfører kommando: '%s'", commandWithPrefix)
+		logger.Info("Executing command '%s' for user %s", commandWithPrefix, m.Author.Username)
 		commands.MatchAndRunCommand(commandWithPrefix, s, m, h.Bot)
 		return
 	}
@@ -121,10 +123,12 @@ func (h *Handler) ReactionRemove(s *discordgo.Session, r *discordgo.MessageReact
 
 // promptForIncorrectWord ber brukaren om å oppgi feil ord
 func (h *Handler) promptForIncorrectWord(s *discordgo.Session, r *discordgo.MessageReactionAdd) {
-	log.Printf("Brukar %s rapporterte feil ord i melding %s", r.UserID, r.MessageID)
+	logger := logging.GetLogger("HANDLER")
+	logger.Info("User %s reported incorrect word in message %s", r.UserID, r.MessageID)
+
 	_, err := s.ChannelMessage(r.ChannelID, r.MessageID)
 	if err != nil {
-		log.Printf("Feil ved henting av melding: %v", err)
+		logger.Error("Error fetching message: %v", err)
 		return
 	}
 
@@ -140,11 +144,12 @@ func (h *Handler) promptForIncorrectWord(s *discordgo.Session, r *discordgo.Mess
 
 // handleNonCommandMessage handsamar meldingar som ikkje er kommandoar
 func (h *Handler) handleNonCommandMessage(s *discordgo.Session, m *discordgo.MessageCreate) {
-	log.Printf("[DEBUG] Handsamar melding som ikkje er kommando: %s", m.Content)
+	logger := logging.GetLogger("HANDLER")
+	logger.Debug("Handling non-command message: %s", m.Content)
 
 	// Check if this is a reply to a bot message (indicating user is responding to hammer emoji prompt)
 	if m.ReferencedMessage != nil && m.ReferencedMessage.Author.ID == s.State.User.ID {
-		log.Printf("[DEBUG] Brukar %s svarte på bot-melding med: %s", m.Author.ID, m.Content)
+		logger.Debug("User %s replied to bot message: %s", m.Author.ID, m.Content)
 
 		// Check if the referenced message was a "Rapporter feil ord" prompt
 		if len(m.ReferencedMessage.Embeds) > 0 &&
@@ -156,7 +161,8 @@ func (h *Handler) handleNonCommandMessage(s *discordgo.Session, m *discordgo.Mes
 
 // processIncorrectWordReport handsamar brukarens svar på feil-ord-rapporten
 func (h *Handler) processIncorrectWordReport(s *discordgo.Session, m *discordgo.MessageCreate) {
-	log.Printf("[DEBUG] Handsamar feil-ord-rapport frå brukar %s: %s", m.Author.ID, m.Content)
+	logger := logging.GetLogger("HANDLER")
+	logger.Debug("[DEBUG] Handsamar feil-ord-rapport frå brukar %s: %s", m.Author.ID, m.Content)
 
 	// Parse the words from the message (comma-separated)
 	words := strings.Split(m.Content, ",")
@@ -174,7 +180,7 @@ func (h *Handler) processIncorrectWordReport(s *discordgo.Session, m *discordgo.
 	}
 
 	if len(validWords) == 0 {
-		log.Printf("Ingen gyldige ord funne i rapport")
+		logger.Debug("Ingen gyldige ord funne i rapport")
 		return
 	}
 
@@ -233,7 +239,7 @@ func (h *Handler) processIncorrectWordReport(s *discordgo.Session, m *discordgo.
 			}
 		}
 	}
-	log.Printf("Henta opphavleg meldingsinfo - Kanal: %s, Melding: %s", originalChannelID, originalMessageID)
+	logger.Debug("Henta opphavleg meldingsinfo - Kanal: %s, Melding: %s", originalChannelID, originalMessageID)
 
 	// Create a variable to hold the thread, but don't create it yet
 	// thread := h.Services.Approval.PostBannedWordReport(s, validWords, m.Author.ID, originalMessageID)
@@ -246,7 +252,7 @@ func (h *Handler) processIncorrectWordReport(s *discordgo.Session, m *discordgo.
 		// Check if word already exists
 		isBanned, _, err := h.Bot.Database.IsBannedWord(word)
 		if err != nil {
-			log.Printf("Feil ved sjekking om ord '%s' finst: %v", word, err)
+			logger.Debug("Feil ved sjekking om ord '%s' finst: %v", word, err)
 			continue
 		}
 
@@ -256,7 +262,7 @@ func (h *Handler) processIncorrectWordReport(s *discordgo.Session, m *discordgo.
 			// if thread != nil {
 			// 	err = h.Bot.Database.UpdateBannedWordThread(word, thread.ID)
 			// 	if err != nil {
-			// 		log.Printf("Error updating forum thread for word '%s': %v", word, err)
+			// 		logger.Debug("Error updating forum thread for word '%s': %v", word, err)
 			// 	}
 			// }
 		} else {
@@ -268,9 +274,9 @@ func (h *Handler) processIncorrectWordReport(s *discordgo.Session, m *discordgo.
 
 			wordID, err := h.Bot.Database.AddBannedWordPending(word, "Reported via hammer emoji", m.Author.ID, m.Author.Username, "", fmt.Sprintf("%s|%s", originalChannelID, originalMessageID))
 			if err != nil {
-				log.Printf("Feil ved tillegging av ventande forbode ord '%s': %v", word, err)
+				logger.Debug("Feil ved tillegging av ventande forbode ord '%s': %v", word, err)
 			} else {
-				log.Printf("La til ventande forbode ord: %s med ID %d", word, wordID)
+				logger.Debug("La til ventande forbode ord: %s med ID %d", word, wordID)
 				// Post to retting channel for approval
 				h.Services.Approval.PostPendingBannedWordToRettingChannel(wordID)
 			}
@@ -300,6 +306,8 @@ func (h *Handler) processIncorrectWordReport(s *discordgo.Session, m *discordgo.
 
 // checkForBannedWords sjekkar om ei melding inneheld forbodne ord og viser åtvaringar
 func (h *Handler) checkForBannedWords(s *discordgo.Session, m *discordgo.MessageCreate) {
+	logger := logging.GetLogger("HANDLER")
+
 	// Skip checking replies to bot messages (to avoid warning on reporting flow)
 	if m.ReferencedMessage != nil && m.ReferencedMessage.Author.ID == s.State.User.ID {
 		return
@@ -316,7 +324,7 @@ func (h *Handler) checkForBannedWords(s *discordgo.Session, m *discordgo.Message
 
 		isBanned, bannedWord, err := h.Bot.Database.IsBannedWord(cleanWord)
 		if err != nil {
-			log.Printf("Feil ved sjekking av forbode ord '%s': %v", cleanWord, err)
+			logger.Debug("Feil ved sjekking av forbode ord '%s': %v", cleanWord, err)
 			continue
 		}
 
@@ -325,7 +333,7 @@ func (h *Handler) checkForBannedWords(s *discordgo.Session, m *discordgo.Message
 			if bannedWord.ForumThreadID != nil {
 				forumThreads = append(forumThreads, *bannedWord.ForumThreadID)
 			}
-			log.Printf("Oppdaga forbode ord '%s' i melding frå brukar %s", cleanWord, m.Author.ID)
+			logger.Debug("Oppdaga forbode ord '%s' i melding frå brukar %s", cleanWord, m.Author.ID)
 		}
 	}
 
@@ -336,6 +344,8 @@ func (h *Handler) checkForBannedWords(s *discordgo.Session, m *discordgo.Message
 
 // sendBannedWordWarning sender åtvaring om oppdaga forbodne ord
 func (h *Handler) sendBannedWordWarning(s *discordgo.Session, m *discordgo.MessageCreate, bannedWords []string, forumThreads []string) {
+	logger := logging.GetLogger("HANDLER")
+
 	warningEmbed := services.CreateBannedWordWarningEmbed(bannedWords, forumThreads)
 
 	// Send as a reply to the original message
@@ -350,12 +360,14 @@ func (h *Handler) sendBannedWordWarning(s *discordgo.Session, m *discordgo.Messa
 
 	_, err := s.ChannelMessageSendComplex(m.ChannelID, reply)
 	if err != nil {
-		log.Printf("Kunne ikkje sende åtvaring om forbodne ord: %v", err)
+		logger.Debug("Kunne ikkje sende åtvaring om forbodne ord: %v", err)
 	}
 }
 
 // InteractionCreate handsamar knappeklikk og andre interaksjonar
 func (h *Handler) InteractionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	logger := logging.GetLogger("HANDLER")
+
 	if i.Type == discordgo.InteractionMessageComponent {
 		customID := i.MessageComponentData().CustomID
 
@@ -371,14 +383,14 @@ func (h *Handler) InteractionCreate(s *discordgo.Session, i *discordgo.Interacti
 					},
 				})
 				if err != nil {
-					log.Printf("Kunne ikkje sende interaksjons-svar: %v", err)
+					logger.Debug("Kunne ikkje sende interaksjons-svar: %v", err)
 				}
 				return
 			}
 
 			// Clear the database
 			if err := h.Bot.Database.ClearDatabase(); err != nil {
-				log.Printf("Kunne ikkje tømme database: %v", err)
+				logger.Debug("Kunne ikkje tømme database: %v", err)
 				// Let the user know something went wrong
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -398,7 +410,7 @@ func (h *Handler) InteractionCreate(s *discordgo.Session, i *discordgo.Interacti
 				},
 			})
 			if err != nil {
-				log.Printf("Kunne ikkje sende interaksjons-svar: %v", err)
+				logger.Debug("Kunne ikkje sende interaksjons-svar: %v", err)
 			}
 
 			// Delete the original confirmation message
