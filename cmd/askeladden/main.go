@@ -6,14 +6,14 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/bwmarrin/discordgo"
+
 	"askeladden/internal/bot"
 	"askeladden/internal/bot/handlers"
 	"askeladden/internal/bot/services"
 	"askeladden/internal/config"
 	"askeladden/internal/database"
 	"askeladden/internal/reactions"
-
-	"github.com/bwmarrin/discordgo"
 )
 
 func main() {
@@ -30,19 +30,19 @@ func main() {
 
 	cfg, err := config.LoadWithFiles(configFile, secretsFile)
 	if err != nil {
-		log.Fatalf("[MAIN] Could not load configuration: %v", err)
+		log.Fatalf("[MAIN] Kunne ikkje laste konfigurasjon: %v", err)
 	}
 
 	// Opprett database-tilkobling
 	db, err := database.New(cfg)
 	if err != nil {
-		log.Fatalf("[MAIN] Could not connect to the database: %v", err)
+		log.Fatalf("[MAIN] Kunne ikkje kople til database: %v", err)
 	}
 
 	// Opprett Discord-sesjon
 	session, err := discordgo.New("Bot " + cfg.Discord.Token)
 	if err != nil {
-		log.Fatalf("[MAIN] Could not create Discord session: %v", err)
+		log.Fatalf("[MAIN] Kunne ikkje lage Discord-sesjon: %v", err)
 	}
 
 	// Enable necessary intents for message content
@@ -68,7 +68,7 @@ func main() {
 
 	// Start bot
 	if err := askeladden.Start(); err != nil {
-		log.Fatalf("[MAIN] Error running bot: %v", err)
+		log.Fatalf("[MAIN] Feil ved oppstart av bot: %v", err)
 	}
 
 	// Scheduler for daily question trigger
@@ -88,6 +88,6 @@ func main() {
 
 	// Stopp bot
 	if err := askeladden.Stop(); err != nil {
-		log.Fatalf("[MAIN] Error stopping bot: %v", err)
+		log.Fatalf("[MAIN] Feil ved stopp av bot: %v", err)
 	}
 }
